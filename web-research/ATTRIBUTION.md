@@ -23,7 +23,7 @@
 - commit：`9d0d3720f4ca181d87bef94da826d730acc6d483`
 - 许可：AGPL-3.0
 - 使用的文件：无。仅参考 `resources/skills/research/web-research-fallback/SKILL.md` 的一般流程概念（一手源优先、打开原文取证、失败先换一手源、记录每页所得、事实与推断分离）。
-- 公开版核验（2026-10-27）：**本仓库不包含 odysseus 的任何文件或逐字文本**。以其上游 `SKILL.md`（881 bytes）与本仓库文本做 8-gram 比对，重合为 0。AGPL-3.0 仅约束其上游项目，不构成本仓库的许可来源，也不产生再分发义务。
+- 版权与许可范围：本仓库不包含 odysseus 的任何文件或逐字文本；AGPL-3.0 仅约束其上游项目，不构成本仓库的许可来源。
 
 ## 3. xixu-me/skills（MIT）
 
@@ -33,17 +33,6 @@
 - 使用的文件：`skills/use-my-browser/`
 - 去向：作为独立技能 `use-my-browser/` **原样再分发**（未修改规则）；其版权与许可见该目录的 `ATTRIBUTION.md` 与 `LICENSE`。
 
-## 4. 获取时间
-
-2026-10-27（Asia/Shanghai），通过 GitHub 官方仓库 raw 文件获取。
-
-## 5. 公开版本核验
-
-- `LICENSE-nWave-MIT.md` 与上游 nWave MIT 文本 SHA-256 一致。
-- `use-my-browser/` 的 13 个文件与 `LICENSE` 与上游 commit 逐字节一致（SHA-256）。
-- odysseus 8-gram 重合为 0。
-- 本仓库不含密钥、凭据、本机绝对路径或会话数据。
-
-## 6. 再分发
+## 4. 再分发
 
 再分发本目录时，请保留：本 `ATTRIBUTION.md`、`LICENSE-nWave-MIT.md`、上游版权声明与 MIT 许可文本，以及仓库根目录的 `THIRD-PARTY-NOTICES.md`。
