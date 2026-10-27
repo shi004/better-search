@@ -4,7 +4,7 @@
 
 > **English** — Two DSH skills for traceable web research. `web-research` prefers official and first-party sources, treats third-party material only as leads, and requires URL/date/quote evidence for important conclusions. `use-my-browser` is a vendored MIT browser-routing skill.
 
-本仓库提供两个技能：`web-research`（研究入口）与 `use-my-browser`（浏览器路由）。仓库名 `better-search` 只用于发布，两个技能 ID 保持不变。
+本仓库提供两个技能：`web-research`（研究入口）与 `use-my-browser`（浏览器路由）。
 
 ## 这是什么
 
