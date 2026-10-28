@@ -13,7 +13,7 @@
   - `nWave/skills/nw-authoritative-sources/SKILL.md`（权威域数据库、主题检索策略、时效规则）
   - `nWave/skills/nw-research-methodology/SKILL.md`（报告模板、置信度、每 claim 来源要求、质量门）
   - `nWave/skills/nw-research/SKILL.md`（仅摘取 “Default Trusted Sources” 默认可信域清单）
-- 去向：`SKILL.md` 与 `references/source-rules.md`、`references/report-template.md`。
+- 去向：`SKILL.md`、`references/sources.md`（信源清单/分级/账号主体）、`references/source-handling.md`（核验/冲突/偏见/时效/引用/经验证据）、`references/report-template.md`（输出模板）。
 - 修改：已翻译、合并、删减并适配 DeepSeek Harness，删除 nWave 专属流程与路径；原规则内容保留。
 - 版权与许可范围：nWave 部分版权归原作者，按 MIT 使用；本仓库的适配修改 © 2026 sjx，同样按 MIT 分发。再分发时必须保留本文件、`LICENSE-nWave-MIT.md` 与 MIT 版权声明。
 

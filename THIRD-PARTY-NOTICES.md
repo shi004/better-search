@@ -9,8 +9,8 @@ directories.
 - Copyright: © 2026 Alessandro Digioia & Michele Brissoni
 - Source: https://github.com/nWave-ai/nWave
 - Commit: `da401a8384dc867314ba2f4a5fd802fafa593e4f`
-- Used in: `web-research/` (`SKILL.md`, `references/source-rules.md`,
-  `references/report-template.md`)
+- Used in: `web-research/` (`SKILL.md`, `references/sources.md`,
+  `references/source-handling.md`, `references/report-template.md`)
 - Changes: translated, merged, condensed and adapted for DeepSeek Harness;
   original rule content is retained where applicable.
 - License text: `web-research/LICENSE-nWave-MIT.md`
