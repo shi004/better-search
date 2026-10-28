@@ -1,8 +1,8 @@
 # better-search
 
-给 DeepSeek Harness（DSH）的**可溯源网页研究技能**：官方与一手信源优先，第三方平台内容只当线索；需要全面搜索时覆盖论坛/社区/社交平台线索并逐条核验；关键结论必须带 URL、日期与原文证据。
+给 DeepSeek Harness（DSH）的**可溯源网页研究技能**：官方与一手信源优先，第三方平台内容默认只当线索（可验证的官方账号除外）；需要全面搜索时覆盖论坛/社区/社交平台线索并逐条核验；关键结论必须带 URL、日期与原文证据。
 
-> **English** — Two DSH skills for traceable web research. `web-research` prefers official and first-party sources, treats third-party platform content as leads, scans relevant forums/communities/social platforms for comprehensive requests and verifies each lead, and requires URL/date/quote evidence for important conclusions. `use-my-browser` is a vendored MIT browser-routing skill.
+> **English** — Two DSH skills for traceable web research. `web-research` prefers official and first-party sources, treats third-party platform content as leads by default (verified official accounts excepted), scans relevant forums/communities/social platforms for comprehensive requests and verifies each lead, and requires URL/date/quote evidence for important conclusions. `use-my-browser` is a vendored MIT browser-routing skill.
 
 本仓库提供两个技能：`web-research`（研究入口）与 `use-my-browser`（浏览器路由）。
 
@@ -16,7 +16,7 @@
 本项目在 nWave（MIT）的信源判断、报告模板与质量门内容基础上，做了面向 DSH 的整合与增补：
 
 - **单入口整合**：把 nWave 的多个研究/信源技能合并为 `web-research` 入口 + 三份按需读取的 references（信源、处理、输出），去掉 nWave 专属流程与路径。
-- **输出分级**：L1 快速查（短答 + 来源，不读模板）、L2 标准调研（结论 + 证据表 + 存疑项）、L3 深度报告（完整模板 + 质量门）。
+- **输出分级**：L1 快速查（短答 + 来源，不读模板）、L2 标准调研（结论 + 证据表含核验状态 + 存疑项）、L3 深度报告（完整模板 + 平台覆盖/线索核验 + 质量门）。
 - **事实与经验分流**：规则/事实型按官方与一手源取证；经验/操作型允许社区实践作为主要依据；混合型分开取证、分别标注。
 - **新增经验证据规则**：可复现、共识度、版本/时间匹配、作者利益披露、样本范围、可验证出处；医疗、金融、法律等高风险主题不得只靠社区经验。
 - **信源/处理分层**：`sources.md` 负责信源清单、分级与账号主体；`source-handling.md` 负责核验、冲突、时效、引用与经验证据；报告模板独立。
@@ -35,25 +35,37 @@
 Windows PowerShell：
 
 ```powershell
-Copy-Item -Recurse .\web-research, .\use-my-browser "$env:USERPROFILE\.dsh\skills\"
+$dest = "$env:USERPROFILE\.dsh\skills"
+New-Item -ItemType Directory -Force $dest | Out-Null
+
+# 首次安装可跳过；从旧版升级时先清理旧目录
+Remove-Item -Recurse -Force (Join-Path $dest 'web-research') -ErrorAction SilentlyContinue
+
+Copy-Item -Recurse .\web-research, .\use-my-browser $dest -Force
 ```
 
 macOS / Linux：
 
 ```bash
 mkdir -p ~/.dsh/skills
+
+# 首次安装可跳过；从旧版升级时先清理旧目录
+rm -rf ~/.dsh/skills/web-research
+
 cp -r web-research use-my-browser ~/.dsh/skills/
 ```
+
+> 从旧版升级时，必须先删除旧 `web-research` 目录；否则已删除的 `source-rules.md` 会残留在技能目录中。
 
 DSH 会监视技能根目录并热加载；新增、改名或 frontmatter 变化后，下一轮的技能目录会更新，无需重启。
 
 ## 使用
 
 - **L1 快速查**：只想“查一下/在哪/给个链接”时，直接给 1–3 句答案 + 1–3 条来源。
-- **L2 标准调研**：需要对比、判断、核实或多源汇总时，给结论 + 证据表 + 存疑项。
-- **L3 深度报告**：尽调、完整调研或需要方法论时，使用完整报告模板与质量门。
+- **L2 标准调研**：需要对比、判断、核实或多源汇总时，给结论 + 证据表（含性质/核验状态） + 存疑项。
+- **L3 深度报告**：尽调、完整调研或需要方法论时，使用完整报告模板（含平台覆盖与线索核验） + 质量门。
 - **全面搜索**：说“尽量搜全/多平台对比/看看社区真实反馈”时，先官方源，再按主题检索相关平台线索，逐条回溯核验；未核验的只列为线索。
-- **微信公众号**：认证主体为该实体的官方公众号，可就其自身发布的事实按官方一手处理；个人号、自媒体号、转载按线索/二手处理。
+- **微信公众号等平台账号**：认证主体为该实体的官方账号，可就其自身发布的事实按官方一手处理；个人号、自媒体号、转载按线索/二手处理。
 - **经验/操作型问题**：攻略、菜谱、使用技巧、维修、体验评测等，允许社区实践经验作为主要依据，但必须符合 `web-research/references/source-handling.md` 第 6 节。
 - **高风险主题**：不得只靠社区经验；按规则从严取证并给出风险提示。
 
@@ -67,8 +79,8 @@ web-research/                  # 研究入口：L1/L2/L3、任务分流、工具
 ├─ ATTRIBUTION.md              # 来源、许可范围与改写说明
 ├─ LICENSE-nWave-MIT.md        # nWave 的 MIT 许可全文
 └─ references/
-   ├─ sources.md              # 信源清单、官方源、账号主体、分级
-   ├─ source-handling.md      # 交叉验证、冲突、偏见、时效、引用、经验证据
+   ├─ sources.md             # 信源清单、官方源、账号主体、分级
+   ├─ source-handling.md     # 交叉验证、冲突、偏见、时效、引用、经验证据
    └─ report-template.md      # L2 证据表 / L3 报告 / 质量门
 
 use-my-browser/                # 浏览器路由（xixu-me/skills，原样再分发）
