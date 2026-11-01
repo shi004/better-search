@@ -69,7 +69,7 @@ DSH 会监视技能根目录并热加载；新增、改名或 frontmatter 变化
 - **经验/操作型问题**：攻略、菜谱、使用技巧、维修、体验评测等，允许社区实践经验作为主要依据，但必须符合 `web-research/references/source-handling.md` 第 6 节。
 - **高风险主题**：不得只靠社区经验；按规则从严取证并给出风险提示。
 
-`web-research` 先尝试内置的搜索与静态抓取；遇到登录、动态渲染、交互、视觉确认、反爬等情况，再加载 `use-my-browser` 判断并操作浏览器。详细规则和输出格式见 `web-research/SKILL.md` 与 `web-research/references/`。
+`web-research` 先尝试内置的搜索与静态抓取；遇到登录、动态渲染、交互、视觉确认、反爬等情况，再加载 `use-my-browser` 判断并操作浏览器。MCP 浏览器直接复用你日常浏览器的登录态；涉及提交、发布、支付、删除等操作应先确认。详细规则和输出格式见 `web-research/SKILL.md` 与 `web-research/references/`。
 
 ## 仓库结构
 
