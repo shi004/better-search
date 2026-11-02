@@ -32,6 +32,7 @@ Use this quick routing table when the task shape is still ambiguous:
 | The URL is known and you need raw HTML such as `meta` tags or JSON-LD             | `curl`             |
 | The task depends on login state, rendered UI, or free-form in-browser exploration | Live browser stack |
 | The site defeats static access methods or requires rendered-state inspection      | Live browser stack |
+| Content lives on a logged-in social/community platform or WeChat article page      | Live browser stack |
 
 Stay on the static path when:
 
@@ -106,12 +107,50 @@ Be careful with false positives:
 - a login modal does not always block DOM extraction
 - a site can look restricted while still exposing the needed links or metadata
 - "not found" can reflect the wrong route shape, missing parameters, or anti-automation behavior rather than true absence
+- a static 403 / 412 / `环境异常` / captcha / `poc_token` page returned to `web_fetch`, `requests`, or `curl` is **not** evidence that the logged-in browser session is blocked
+- do not carry a static failure forward as "需登录 / 被拦截" without a live read
 
 When login is needed, say exactly what is blocked. The default wording is:
 
 > "The current page is still unable to access [specific content] without login. Please sign in to [site name] in your current browser session, then tell me to continue."
 
 After the user logs in, keep the existing workflow and continue with a refresh or a fresh task-owned page rather than rebuilding the whole browser setup from scratch.
+
+## Access-state claims
+
+A claim that a source is "blocked", "requires login", or "cannot be read" is an evidence claim, not a fallback. Record an access state per source before making it.
+
+| Access state | Meaning | Allowed wording |
+| --- | --- | --- |
+| `read-in-browser` | Content was read in the live browser session | "可读 / read via browser" |
+| `static-only` | Static retrieval only, no browser read; completeness is stated in Evidence (complete / partial / stale) | "static-only, browser not used；完整性见 Evidence" — never upgrade this to `read-in-browser` without a live read |
+| `static-blocked` | Static retrieval hit a wall (`环境异常`, captcha, `poc_token`, 403, 412) and no browser read was attempted | "静态抓取受限（未证实不可读）/ undetermined" |
+| `browser-blocked` | A live-browser attempt failed and the URL plus page text are recorded | "blocked / 需登录" (only state that allows this) |
+| `capability-missing` | The live browser stack or the required logged-in session is unavailable in this agent | "未尝试：本会话无登录态浏览器 / capability missing" — an environment statement, never a source verdict |
+| `not-attempted` | No attempt yet | no verdict |
+
+Rules:
+
+- The only state that may produce "需登录 / 被拦截 / blocked" is `browser-blocked`, with the URL and the page text that shows the wall.
+- Static-fetch failures on walled sites are `static-blocked`, which is **undetermined**, not a conclusion about the site.
+- If the user or runtime context states a session is logged in, that outranks any anonymous-fetch failure: do one live read before reporting anything.
+- Sub-agent reporting (authoritative list; other files reference this instead of restating it): `read-in-browser` only when the sub-agent owns a live session and did the read itself; otherwise `static-only`, `static-blocked`, `capability-missing`, `not-attempted`. Only the page owner may declare `browser-blocked`.
+- `capability-missing` describes the agent's environment, not the source: record it together with the missing capability (no browser stack / no logged-in session) and hand the source to an owner that has the capability. Record it only after a capability probe actually failed (tool inventory checked, or one call attempted) and include that evidence; if no probe was made, use `not-attempted`.
+- Mixed evidence: if static retrieval returns only discovery fields (search snippet, list title, summary) while the substantive content (article body, attachment, job table) hits a wall, record the obtained fields as `static-only` **and** the substantive claim as `static-blocked`; never present a snippet as the body. When a single source yields mixed evidence, use one ledger row per claim instead of collapsing both into one state.
+- `static-only` does not mean incomplete: when static retrieval obtained the full text (typical for a `.gov.cn` notice), keep `static-only` and write `complete` in Evidence. Only a live read may change the state to `read-in-browser`.
+- Precedence: when a task names walled sources, this access-state model overrides static-first defaults from other skills (for example `web-research`'s "prefer built-in search, escalate as needed"). Escalation is the default for these sources.
+- When the deliverable's value depends on platform content, include a short source-access ledger in the output.
+
+Example ledger:
+
+| Source | Route | Access state | Evidence |
+| --- | --- | --- | --- |
+| 公众号文章 A | live browser | `read-in-browser` | article body read, title matched |
+| 搜狗微信列表（同一篇 A） | static fetch | `static-only` | only title + snippet obtained (partial); snippet is not the body |
+| 某市人社局公告 | static fetch | `static-only` | full text + deadline obtained statically (complete); browser not used |
+| 小红书 keyword search | live browser | `read-in-browser` | 30 cards parsed; note text used as lead only |
+| 某招聘网站列表 | static fetch | `static-blocked` | 412 response; browser not attempted → undetermined |
+| 某平台（本会话无登录态） | none | `capability-missing` | no live session in this agent; escalated to browser owner |
 
 ## Primary-source verification
 
@@ -127,6 +166,8 @@ Prefer these source classes:
 | Tool behavior or usage | Official docs and source code                         |
 
 Use repeated secondary reporting only as a discovery aid. Once you have a credible lead, go read the original text.
+
+Social-platform posts (公众号/小红书/抖音/微博) are leads, not evidence. Trace each claim to an official or first-party page before recording it as a fact; if no first-party page can be found, label it as a single non-official source.
 
 If the primary source cannot be located after reasonable effort:
 

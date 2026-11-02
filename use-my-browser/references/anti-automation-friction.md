@@ -58,12 +58,28 @@ Typical signals:
 - rate-limit, bot-check, or defensive copy appears
 - the same route behaves inconsistently within a short span
 - the page seems present, but the action path becomes unusually fragile after repeated automation
+- static fetchers (`web_fetch`, `requests`, `curl`) receive `环境异常` / `poc_token` / captcha / 403 / 412 while the same URL renders normally in the live browser session
 
 Preferred response:
 
 - reduce mutation frequency
 - switch to the smallest reliable read-only probe
 - stop and report once the page is plausibly in a defensive state
+
+## Static-retrieval false positives
+
+A wall returned to an anonymous client is not evidence that a logged-in session is blocked.
+
+Typical shape:
+
+- `web_fetch`, `requests`, or `curl` receives a verification page: `环境异常，完成验证后即可继续访问`, `poc_token`, captcha, 403, 412
+- the same URL renders normally in the user's live browser session
+
+Treatment:
+
+- classify as `static-blocked` / undetermined, not `blocked`
+- escalate to one live-browser read before drawing any conclusion
+- record the discrepancy in the matching site-pattern note
 
 ## Compact decision path
 
@@ -114,6 +130,7 @@ Good examples:
 - the site-generated detail link exists, but the hand-built URL produces a soft 404
 - the current session is still being redirected to sign-in for the requested control
 - the control became no-op after repeated attempts and the page now looks rate-limited
+- anonymous retrieval hits a `poc_token` / captcha wall while the logged-in browser renders the page: report `static-blocked` (undetermined), then read it in the browser
 
 ## Boundary
 

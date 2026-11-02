@@ -9,7 +9,7 @@
 ## 这是什么
 
 - **`web-research`**：先判任务类型，再按 L1/L2/L3 分级检索、取证和输出。适合查资料、核实信息、多源对比，以及市场、生活、设计类调研；纯本地文件、代码或数据任务不需要加载。
-- **`use-my-browser`**：判断静态抓取是否足够；需要登录态、动态渲染、交互、视觉确认或真实浏览器状态时，路由到当前环境的 MCP 浏览器。来自 xixu-me/skills，MIT 原样再分发。
+- **`use-my-browser`**：判定“该不该用浏览器、能不能读到”。任务点名微信公众号/小红书/抖音/微博/B 站/知乎等平台，或涉及已登录站点时，**规划期**就加载它判路由；静态抓取失败不等于来源不可读，访问状态与 blocked 语义由它统一。基线来自 xixu-me/skills（MIT），本项目在其上增补了会话墙路由、访问状态、站点笔记与委派契约。
 
 ## 本项目的新贡献
 
@@ -21,9 +21,24 @@
 - **新增经验证据规则**：可复现、共识度、版本/时间匹配、作者利益披露、样本范围、可验证出处；医疗、金融、法律等高风险主题不得只靠社区经验。
 - **信源/处理分层**：`sources.md` 负责信源清单、分级与账号主体；`source-handling.md` 负责核验、冲突、时效、引用与经验证据；报告模板独立。
 - **多平台线索与核验**：低信任平台改为“仅线索”而非排除；新增论坛、贴吧、小红书、B 站、知乎、Steam、微博、小黑盒、微信公众号、抖音、快手等平台清单，以及帖子/视频下的评论区、回复、弹幕、留言；评论只作 UGC 线索、可按主题抽样，不作为独立来源；微信公众号等按账号主体判定官方性；报告模板增加核验状态与线索表。
-- **工具路由**：内置搜索/抓取优先；登录、动态渲染、交互、视觉确认、反爬等才升级到 MCP 浏览器；不绑定具体浏览器工具名。
+- **工具路由（2026-11 重构）**：按来源分流——普通页面静态优先；**点名平台/登录态页面则在规划期判为 `browser-required` 并直接走浏览器**（不再“抓失败再升级”）。访问状态统一为 `read-in-browser` / `static-only` / `static-blocked` / `browser-blocked` / `capability-missing` / `not-attempted`，**只有 `browser-blocked` 允许说“需登录/被拦截/不可访问”**；静态墙（`环境异常` / `poc_token` / 验证码 / 403 / 412）只算 `static-blocked`（undetermined）。
+- **误报防线（2026-11）**：新增 `## Access-state claims`（访问状态 + 来源访问台账）、`blocked` 证据门槛、“用户说已登录则先实读”、“`capability-missing` 须先做能力探测”、“子代理不继承登录态、不得把 `static-blocked` 升级为 blocked”，以及交付前 20 秒自检。
+- **站点笔记**：`use-my-browser/references/site-patterns/` 新增 4 个实测笔记（`mp.weixin.qq.com`、`weixin.sogou.com`、`xiaohongshu.com`、`douyin.com`），记录路由形状、选择器、风控特征与坑；下次遇到同名站点不再靠猜。
+- **双技能配合**：`web-research` 负责“证据/性质/置信度”，`use-my-browser` 是“浏览器是否必需”的唯一裁判；路由与访问状态归后者，能否作官方一手归前者，冲突时按此裁决。
 - **DSH 适配**：中文改写、安全与失败边界、引用去重、安装与许可打包。
 - **边界**：`use-my-browser` 是 xixu-me/skills 的 MIT 原样再分发，不是本项目原创；nWave 来源内容按 MIT 改写并保留署名。
+
+## 更新记录
+
+### 2026-11-02｜修复平台来源误报（v1.3）
+
+- **问题**：静态抓取微信公众号会被微信风控返回“环境异常/`poc_token`”验证页；此前据此写成“公众号被拦截、小红书/抖音需登录”，并写进结论（实测登录态浏览器可正常读、可正常搜）。
+- **use-my-browser**：会话墙来源默认 `browser-required`；点名平台/登录态站点时**规划期加载**；新增 `## Access-state claims`（6 态 + 来源访问台账）；`blocked` 只能来自 `browser-blocked`；`static-partial` 更名 `static-only`（注明完整性、不得升格 `read-in-browser`）；`capability-missing` 须先做能力探测；新增子代理委派契约与 20 秒自检；新增 4 个 site-pattern 笔记。
+- **web-research**：§2 新增触发前置（平台/已登录 → 规划期判路由）；`blocked` 口径改为 `capability-missing`；静态摘要 ≠ 正文；子代理不继承登录态；证据表/来源分析表新增“访问状态”列；质量门第 7、11 条改为访问状态口径。
+
+### 2026-10-27｜初始导入
+
+- 从 nWave（MIT）整合 `web-research`，`use-my-browser` 原样 vendored；新增社区经验证据规则与平台线索清单。
 
 ## 安装
 
@@ -69,7 +84,7 @@ DSH 会监视技能根目录并热加载；新增、改名或 frontmatter 变化
 - **经验/操作型问题**：攻略、菜谱、使用技巧、维修、体验评测等，允许社区实践经验作为主要依据，但必须符合 `web-research/references/source-handling.md` 第 6 节。
 - **高风险主题**：不得只靠社区经验；按规则从严取证并给出风险提示。
 
-`web-research` 先尝试内置的搜索与静态抓取；遇到登录、动态渲染、交互、视觉确认、反爬等情况，再加载 `use-my-browser` 判断并操作浏览器。MCP 浏览器直接复用你日常浏览器的登录态；涉及提交、发布、支付、删除等操作应先确认。详细规则和输出格式见 `web-research/SKILL.md` 与 `web-research/references/`。
+`web-research` 按来源分流：普通页面先用内置搜索/静态抓取；任务点名微信公众号、小红书、抖音、微博、B 站、知乎等平台或已登录站点时，**规划期**加载 `use-my-browser` 判路由并直接走浏览器，静态抓取失败只记“静态受限（未证实不可读）”，不得推断“需登录/被拦截”。MCP 浏览器直接复用你日常浏览器的登录态；涉及提交、发布、支付、删除等操作应先确认。详细规则和输出格式见 `web-research/SKILL.md`、`use-my-browser/SKILL.md` 与其 references。
 
 ## 仓库结构
 
@@ -83,11 +98,16 @@ web-research/                  # 研究入口：L1/L2/L3、任务分流、工具
    ├─ source-handling.md     # 交叉验证、冲突、偏见、时效、引用、经验证据
    └─ report-template.md      # L2 证据表 / L3 报告 / 质量门
 
-use-my-browser/                # 浏览器路由（xixu-me/skills，原样再分发）
+use-my-browser/                # 浏览器路由与访问状态（基线 xixu-me/skills，MIT；本项目增补）
 ├─ SKILL.md
 ├─ ATTRIBUTION.md
 ├─ LICENSE                    # MIT
-└─ references/（12 篇）
+└─ references/
+   ├─ task-routing.md         # 路由分类 + Access-state claims（访问状态权威清单）
+   ├─ anti-automation-friction.md  # 反爬诊断 + 静态抓取误报
+   ├─ parallel-browser-ownership.md # 页面所有权 + 委派契约
+   ├─ site-patterns/          # 4 个实测平台笔记：公众号/搜狗微信/小红书/抖音
+   └─ …（其余操作类参考）
 ```
 
 ## 兼容性

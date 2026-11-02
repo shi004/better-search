@@ -121,3 +121,13 @@ If another agent needs a browser action, hand it off request-style instead of sh
 - "Submit this form in your own page and report the confirmation text."
 
 That keeps ownership crisp, stale `uid` risk low, and cleanup safe.
+
+## Delegation contract for walled sources
+
+Sub-agents do not inherit the user's live browser session. When delegating research over logged-in platforms (公众号, 小红书, 抖音, 招聘平台, dashboards) or any site the user says is already logged in:
+
+- state the evidence target and the allowed route per source, and say explicitly that a static-fetch failure is not evidence of inaccessibility
+- require the sub-agent to report, per source: route used, access state (authoritative list in `task-routing.md` → Access-state claims: `read-in-browser` only if it owns a live session, else `static-only` / `static-blocked` / `capability-missing` / `not-attempted`; `browser-blocked` only by the page owner), and the evidence
+- never upgrade a sub-agent's `static-blocked` report into "blocked / needs login" on their behalf
+- only the agent that owns the live browser page may declare `browser-blocked`
+- if the split requires live reads, assign a browser owner instead of asking every sub-agent to fetch the same walled site

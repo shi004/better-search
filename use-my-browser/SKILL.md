@@ -1,6 +1,6 @@
 ---
 name: use-my-browser
-description: Use when work depends on the user's live browser session or visible rendered state rather than static fetches, especially for browser debugging contexts or DevTools-selected elements or requests, logged-in dashboards or CMS flows, localhost apps, forms, uploads, downloads, media inspection, DOM or iframe inspection, Shadow DOM, or browser failures that look like soft 404s, auth walls, anti-bot checks, or rate limits.
+description: Use when work depends on the user's live browser session or visible rendered state rather than static fetches, especially for logged-in social/community platforms (小红书/抖音/微博/B站/知乎) and WeChat public-account article pages (mp.weixin.qq.com), any site the user says is already logged in, browser debugging contexts or DevTools-selected elements, logged-in dashboards or CMS flows, localhost apps, forms, uploads, downloads, media inspection, DOM or iframe inspection, Shadow DOM, or browser failures that look like soft 404s, auth walls, anti-bot checks, or rate limits. Also load it at planning time when a task *names* walled sources (公众号/小红书/抖音/招聘平台) as research targets, not only after a fetch fails.
 ---
 
 Do not treat this skill as a generic browsing default. Route from the evidence you need, not from tool preference.
@@ -10,11 +10,29 @@ Every task must be classified before you choose a route:
 - `static-capable`: the evidence can be produced without live browser state, visible confirmation, or page interaction
 - `browser-required`: the evidence depends on rendered state, interaction, live session behavior, or browser-only structures
 
-Only `static-capable` tasks may fall back to static retrieval, `curl`, or other non-browser paths. Once a task is `browser-required`, stay on the browser path and mark missing capability as `blocked` instead of silently downgrading.
+Only `static-capable` tasks may fall back to static retrieval, `curl`, or other non-browser paths. Once a task is `browser-required`, stay on the browser path. If the required capability is missing, record `capability-missing` and stop — do not silently downgrade, and do not turn a capability gap into a source-access verdict (see "Access-state claims" in [`references/task-routing.md`](./references/task-routing.md)).
+
+## Session-walled sources are `browser-required` by default
+
+Treat these as `browser-required` unless the live browser proves otherwise:
+
+- logged-in social/community platforms and WeChat public-account article pages: 小红书, 抖音, 微博, B站, 知乎, `mp.weixin.qq.com`
+- pages assembled after JS execution or gated by a token/captcha parameter (`poc_token`, `x5sec`, `__jsl_clearance`)
+- any site the user or runtime context says is already logged in in this browser
+
+For these sources, web search, page retrieval, `web_fetch`, `curl`, and `requests` are **discovery tools only**. A static failure never proves the content is inaccessible: classify it as undetermined and escalate to one live-browser read. See [`references/task-routing.md`](./references/task-routing.md) → "Access-state claims".
+
+**Precedence:** when a task names walled sources as research targets, this skill's walled-source classification overrides static-first defaults from other skills (for example `web-research`'s "prefer built-in search/fetch, escalate as needed"). Escalation is the default for these sources, not an option.
 
 ## Prerequisite check
 
 This skill is for work inside the user's live browser session, not for launching a separate fresh automation browser.
+
+Load this skill when the task *names* a walled source, not after a fetch fails. If a task lists 公众号 / 小红书 / 抖音 / 招聘平台 / logged-in pages as sources, load it at planning time and record three things before choosing tools:
+
+1. is a live browser stack available? (yes/no)
+2. which sessions does the user or runtime context say are already logged in?
+3. what route does each source need: static, browser, or undetermined?
 
 Before doing browser automation, confirm that your environment already has access to a live browser stack that can provide the capabilities the task depends on, such as page inventory, task-owned page creation, page selection, snapshots or visible-state reads, DOM inspection, text or form input, uploads, dialogs, console inspection, and network inspection. The exact stack does not matter here: confirm capability, not brand.
 
@@ -35,6 +53,8 @@ For `browser-required` work, run this loop:
 5. If the run verified something reusable or disproved an existing claim, update the matching note before finishing.
 
 Do not create a domain note for one-off noise. Do not skip the end-of-run review just because the task itself succeeded.
+
+A run that concludes a source is inaccessible must leave browser evidence: either a recorded live-browser attempt (URL + page text) or an updated site-pattern note. A static retrieval failure (`环境异常`, captcha, `poc_token`, 403, 412) is never by itself a `blocked` conclusion. See "Access-state claims" in [`references/task-routing.md`](./references/task-routing.md).
 
 Writeback is expected when a run verifies any of the following:
 
@@ -71,6 +91,8 @@ Treat the following as `browser-required` by default:
 - uploads, downloads, drag-and-drop, hover, keyboard-native entry, or visible confirmation states
 - same-origin iframe inspection, Shadow DOM inspection, `details` / collapsed evidence, or lazy-loaded content
 - any task where "what the page visibly shows" is itself the evidence
+- logged-in social/community platforms (`小红书`, `抖音`, `微博`, `B站`, `知乎`) and WeChat public-account article pages (`mp.weixin.qq.com`)
+- any source the user or runtime context says is already logged in in this browser
 
 The normal happy path for a common task is this entrypoint plus one or two references, not the entire reference set.
 
@@ -81,6 +103,10 @@ The normal happy path for a common task is this entrypoint plus one or two refer
 - Treat this file as the entrypoint and each reference file as a single-purpose authority. Do not duplicate rules across files.
 - Keep reference loading one level deep. Decide the next file from this entrypoint instead of turning one reference into a hub that links to more references.
 - Do not ask the user to log in just because a page looks restricted. First confirm whether the target content or action is actually blocked.
+- Session state outranks anonymous retrieval: when the user or runtime context says a session is logged in, do not report "login required" from a static fetch result; do one live read first.
+- `blocked` is an evidence claim: never report "blocked / 需登录 / 被拦截" unless a live-browser attempt is recorded (URL + page text). Static walls (`环境异常`, `poc_token`, captcha, 403, 412) are `undetermined`, not `blocked`.
+- `capability-missing` requires a failed capability probe recorded first (tool inventory checked or one call attempted, with that evidence). Without a probe, record `not-attempted` instead.
+- Sub-agents do not inherit the live browser session: when delegating research over walled sources, require per-source route + access state in their output and never upgrade their static-failure report into a blocked claim.
 - Prefer site-generated DOM links over hand-built URLs once the page has shown you the path it expects.
 - Prefer MCP-native actions over script-driven interaction when the task is genuinely an in-browser action.
 - Only close pages you created.
@@ -92,6 +118,18 @@ The normal happy path for a common task is this entrypoint plus one or two refer
 - Do not treat a generic page-opening tool as evidence that localhost deep interaction is available.
 - Do not switch routes just because a browser capability probe failed. Record the missing capability and stop.
 - When the user indicates an active browser debugging context, prefer handoff from that current context over fresh reproduction from scratch.
+
+## 20-second self-check
+
+Before delivering any result whose value depends on walled sources, answer these in one pass:
+
+- [ ] Did I load this skill at planning time (the task named 公众号 / 小红书 / 抖音 / 招聘平台 / logged-in pages)?
+- [ ] Does every walled source have a route and an access state (`read-in-browser` / `static-only` / `static-blocked` / `browser-blocked` / `capability-missing` / `not-attempted`; `static-only` states in Evidence whether the text was complete)?
+- [ ] Is every "blocked / 需登录 / 被拦截" backed by a live-browser attempt rather than a static fetch failure?
+- [ ] If the site behaved in a reusable way, did I create or update its note under [`references/site-patterns/`](./references/site-patterns/)?
+- [ ] If platform content is part of the deliverable, does the output carry a short source-access ledger?
+
+If any answer is "no", fix it before finishing.
 
 ## Reference index
 
@@ -108,3 +146,4 @@ The normal happy path for a common task is this entrypoint plus one or two refer
 - [`references/browser-recovery.md`](./references/browser-recovery.md): stale `uid`, navigation drift, and console / network escalation
 - [`references/site-patterns/README.md`](./references/site-patterns/README.md): site-pattern note maintenance rules
 - [site-patterns/{domain}.md](./references/site-patterns/): existing domain-specific operating knowledge
+- New (2026-11-02): [mp.weixin.qq.com.md](./references/site-patterns/mp.weixin.qq.com.md), [weixin.sogou.com.md](./references/site-patterns/weixin.sogou.com.md), [xiaohongshu.com.md](./references/site-patterns/xiaohongshu.com.md), [douyin.com.md](./references/site-patterns/douyin.com.md): verified walled-source notes for the platforms that most often produce false "blocked" reports
