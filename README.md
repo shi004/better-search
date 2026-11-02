@@ -21,24 +21,12 @@
 - **新增经验证据规则**：可复现、共识度、版本/时间匹配、作者利益披露、样本范围、可验证出处；医疗、金融、法律等高风险主题不得只靠社区经验。
 - **信源/处理分层**：`sources.md` 负责信源清单、分级与账号主体；`source-handling.md` 负责核验、冲突、时效、引用与经验证据；报告模板独立。
 - **多平台线索与核验**：低信任平台改为“仅线索”而非排除；新增论坛、贴吧、小红书、B 站、知乎、Steam、微博、小黑盒、微信公众号、抖音、快手等平台清单，以及帖子/视频下的评论区、回复、弹幕、留言；评论只作 UGC 线索、可按主题抽样，不作为独立来源；微信公众号等按账号主体判定官方性；报告模板增加核验状态与线索表。
-- **工具路由（2026-11 重构）**：按来源分流——普通页面静态优先；**点名平台/登录态页面则在规划期判为 `browser-required` 并直接走浏览器**（不再“抓失败再升级”）。访问状态统一为 `read-in-browser` / `static-only` / `static-blocked` / `browser-blocked` / `capability-missing` / `not-attempted`，**只有 `browser-blocked` 允许说“需登录/被拦截/不可访问”**；静态墙（`环境异常` / `poc_token` / 验证码 / 403 / 412）只算 `static-blocked`（undetermined）。
-- **误报防线（2026-11）**：新增 `## Access-state claims`（访问状态 + 来源访问台账）、`blocked` 证据门槛、“用户说已登录则先实读”、“`capability-missing` 须先做能力探测”、“子代理不继承登录态、不得把 `static-blocked` 升级为 blocked”，以及交付前 20 秒自检。
+- **工具路由**：按来源分流——普通页面静态优先；**点名平台/登录态页面则在规划期判为 `browser-required` 并直接走浏览器**（不再“抓失败再升级”）。访问状态统一为 `read-in-browser` / `static-only` / `static-blocked` / `browser-blocked` / `capability-missing` / `not-attempted`，**只有 `browser-blocked` 允许说“需登录/被拦截/不可访问”**；静态墙（`环境异常` / `poc_token` / 验证码 / 403 / 412）只算 `static-blocked`（undetermined）。
+- **误报防线**：新增 `## Access-state claims`（访问状态 + 来源访问台账）、`blocked` 证据门槛、“用户说已登录则先实读”、“`capability-missing` 须先做能力探测”、“子代理不继承登录态、不得把 `static-blocked` 升级为 blocked”，以及交付前 20 秒自检。
 - **站点笔记**：`use-my-browser/references/site-patterns/` 新增 4 个实测笔记（`mp.weixin.qq.com`、`weixin.sogou.com`、`xiaohongshu.com`、`douyin.com`），记录路由形状、选择器、风控特征与坑；下次遇到同名站点不再靠猜。
 - **双技能配合**：`web-research` 负责“证据/性质/置信度”，`use-my-browser` 是“浏览器是否必需”的唯一裁判；路由与访问状态归后者，能否作官方一手归前者，冲突时按此裁决。
 - **DSH 适配**：中文改写、安全与失败边界、引用去重、安装与许可打包。
 - **边界**：`use-my-browser` 是 xixu-me/skills 的 MIT 原样再分发，不是本项目原创；nWave 来源内容按 MIT 改写并保留署名。
-
-## 更新记录
-
-### 2026-11-02｜修复平台来源误报（v1.3）
-
-- **问题**：静态抓取微信公众号会被微信风控返回“环境异常/`poc_token`”验证页；此前据此写成“公众号被拦截、小红书/抖音需登录”，并写进结论（实测登录态浏览器可正常读、可正常搜）。
-- **use-my-browser**：会话墙来源默认 `browser-required`；点名平台/登录态站点时**规划期加载**；新增 `## Access-state claims`（6 态 + 来源访问台账）；`blocked` 只能来自 `browser-blocked`；`static-partial` 更名 `static-only`（注明完整性、不得升格 `read-in-browser`）；`capability-missing` 须先做能力探测；新增子代理委派契约与 20 秒自检；新增 4 个 site-pattern 笔记。
-- **web-research**：§2 新增触发前置（平台/已登录 → 规划期判路由）；`blocked` 口径改为 `capability-missing`；静态摘要 ≠ 正文；子代理不继承登录态；证据表/来源分析表新增“访问状态”列；质量门第 7、11 条改为访问状态口径。
-
-### 2026-10-27｜初始导入
-
-- 从 nWave（MIT）整合 `web-research`，`use-my-browser` 原样 vendored；新增社区经验证据规则与平台线索清单。
 
 ## 安装
 
@@ -106,7 +94,7 @@ use-my-browser/                # 浏览器路由与访问状态（基线 xixu-me
    ├─ task-routing.md         # 路由分类 + Access-state claims（访问状态权威清单）
    ├─ anti-automation-friction.md  # 反爬诊断 + 静态抓取误报
    ├─ parallel-browser-ownership.md # 页面所有权 + 委派契约
-   ├─ site-patterns/          # 4 个实测平台笔记：公众号/搜狗微信/小红书/抖音
+   ├─ site-patterns/          # 实测平台笔记：公众号/搜狗微信/小红书/抖音
    └─ …（其余操作类参考）
 ```
 
